@@ -10,18 +10,20 @@
 # current working directory for these tests to execute correctly.
 #
 
+from typing import Optional
 import triegen
 import unittest
 
 def get_word_list(
-    node: triegen.TrieNode, words: list[str]=[], path: str="") -> list[str]:
+    node: triegen.TrieNode, path: str="", words: Optional[list[str]]=None):
   """
-  Converts a character-wise trie into a list of strings for each traversal from
-  the root to every leaf.
+  Returns a list of strings obtained from a depth-first traversal of a trie.
   """
+  if words is None:
+    words = []
   for key, child in node.items():
     if child:
-      get_word_list(child, words, path + key)
+      get_word_list(child, path + key, words)
     else:
       words.append(path + key)
   return words
@@ -31,18 +33,20 @@ class TriegenTests(unittest.TestCase):
   def setUpClass(cls):
     # Assumes word_list.txt exists in the current working directory
     with open("word_list.txt", 'r') as word_list:
-      TriegenTests.words: list[str] = [word.strip() for word in word_list]
+      TriegenTests.words: set[str] = set(word.strip() for word in word_list)
 
   def test_uncompressed(self):
     trie = triegen.generate_trie(TriegenTests.words)
     actual = get_word_list(trie)
-    self.assertEqual(set(actual), set(TriegenTests.words))
+    self.assertEqual(len(actual), len(TriegenTests.words))
+    self.assertEqual(set(actual), TriegenTests.words)
 
   def test_compressed(self):
     trie = triegen.generate_trie(TriegenTests.words)
     compressed = triegen.compress_trie(trie)
     actual = get_word_list(compressed)
-    self.assertEqual(set(actual), set(TriegenTests.words))
+    self.assertEqual(len(actual), len(TriegenTests.words))
+    self.assertEqual(set(actual), TriegenTests.words)
 
 if __name__ == "__main__":
   unittest.main()
