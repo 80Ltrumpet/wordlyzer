@@ -9397,27 +9397,20 @@
         this.counts.push(this.possible.length);
       }
 
-      findPossibleWordsRecursive(node, word = "", path_index = 0) {
-        if (!node) return this.possible.push(word);
-        const index = word.length;
-        // Compute the intersection of the node's path keys and the
-        // letterSet of the current column.
-        const letters = new Set(
-          Object.getOwnPropertyNames(node).filter(
-            (path) =>
-              path.length > path_index &&
-              this.letterSets[index].has(path[path_index])
+      findPossibleWordsRecursive(node, word = "") {
+        if (Object.keys(node).length === 0) return this.possible.push(word);
+        // Compute the intersection of the node's path keys and their
+        // associated letterSets.
+        const start = word.length;
+        const paths = new Set(
+          Object.getOwnPropertyNames(node).filter(path =>
+            this.letterSets.slice(start, start + path.length).every(
+              (letterSet, index) => letterSet.has(path[index])
+            )
           )
         );
-        for (let letter of letters) {
-          if (letter in node) {
-            this.findPossibleWordsRecursive(node[letter], word + letter);
-          } else {
-            // The path in which the letter is contained is longer than
-            // one character.
-            this.findPossibleWordsRecursive(
-              node, word + letter, path_index + 1);
-          }
+        for (let path of paths) {
+          this.findPossibleWordsRecursive(node[path], word + path);
         }
       }
 
